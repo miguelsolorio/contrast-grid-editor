@@ -1,6 +1,6 @@
 # Contrast Grid Editor
 
-_This entire site was built entirely by `claude-3.5-sonnet1`_
+_Note: This entire site was built by `claude-3.5-sonnet1`_
 
 A modern, interactive web application for testing color contrast ratios between different combinations of colors. Built with React, TypeScript, and Tailwind CSS, this tool helps designers and developers ensure their color choices meet WCAG accessibility standards.
 
