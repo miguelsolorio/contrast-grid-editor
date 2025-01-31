@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 min-h-screen;
+  }
+}
+
+.contrast-cell {
+  @apply relative p-4 text-center border border-gray-200;
+}
+
+.contrast-cell.passing-aaa {
+  @apply after:content-['AAA'] after:absolute after:top-1 after:right-1 after:text-xs after:font-bold after:text-green-600;
+}
+
+.contrast-cell.passing-aa {
+  @apply after:content-['AA'] after:absolute after:top-1 after:right-1 after:text-xs after:font-bold after:text-blue-600;
+}
+
+.contrast-cell.failing {
+  @apply after:content-['✕'] after:absolute after:top-1 after:right-1 after:text-xs after:font-bold after:text-red-600;
+}
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+}
