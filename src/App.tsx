@@ -32,10 +32,10 @@ const getContrastClass = (ratio: number): string => {
   return 'failing';
 };
 
-const getContrastLabel = (ratio: number): string => {
+const getContrastLabel = (ratio: number): JSX.Element | string => {
   if (ratio >= 7) return 'AAA';
   if (ratio >= 4.5) return 'AA';
-  return '';
+  return <span className="text-red-600 font-bold">✕</span>;
 };
 
 const parseColorInput = (input: string): ColorEntry => {
@@ -87,12 +87,10 @@ const ColorSlider: React.FC<{
 
 const ColorPicker: React.FC<ColorPickerProps> = ({ color, onChange, onClose, triggerRect }) => {
   const [hsl, setHsl] = useState<HSL>(hexToHsl(color));
-  const [position, setPosition] = useState<Position>(() => ({
+  const position = {
     x: triggerRect ? Math.max(0, triggerRect.left + (triggerRect.width / 2) - 140) : 100,
-    y: triggerRect ? Math.max(0, triggerRect.top - 380) : 100
-  }));
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState<Position>({ x: 0, y: 0 });
+    y: triggerRect ? Math.max(0, triggerRect.top - 330) : 100
+  };
 
   const updateHsl = (newHsl: HSL) => {
     setHsl(newHsl);
@@ -104,62 +102,19 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ color, onChange, onClose, tri
     }
   };
 
-  const handleDragStart = (e: React.MouseEvent<HTMLDivElement>) => {
-    setIsDragging(true);
-    const rect = e.currentTarget.getBoundingClientRect();
-    setDragOffset({
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    });
-  };
-
-  const handleDrag = (e: MouseEvent) => {
-    if (!isDragging) return;
-
-    setPosition({
-      x: e.clientX - dragOffset.x,
-      y: e.clientY - dragOffset.y
-    });
-  };
-
-  const handleDragEnd = () => {
-    setIsDragging(false);
-  };
-
-  useEffect(() => {
-    if (isDragging) {
-      window.addEventListener('mousemove', handleDrag);
-      window.addEventListener('mouseup', handleDragEnd);
-      return () => {
-        window.removeEventListener('mousemove', handleDrag);
-        window.removeEventListener('mouseup', handleDragEnd);
-      };
-    }
-  }, [isDragging]);
-
   return (
     <div className="fixed inset-0 z-50" onClick={onClose}>
       <div
-        className="absolute bg-white rounded-lg shadow-xl w-[280px]"
+        className="absolute bg-white rounded-lg shadow-2xl w-[280px] border border-gray-200/50"
         style={{
           left: position.x,
           top: position.y,
-          cursor: isDragging ? 'grabbing' : 'default'
         }}
         onClick={e => e.stopPropagation()}
       >
-        <div
-          className="p-2 border-b border-gray-200 cursor-grab active:cursor-grabbing flex justify-between items-center"
-          onMouseDown={handleDragStart}
-        >
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7l4-4m0 0l4 4m-4-4v18m4-14l-4 4m0 0L8 11m4 4v6" />
-            </svg>
-            <span>Drag to move</span>
-          </div>
+        <div className="absolute right-2 top-2">
           <button
-            className="p-1 text-gray-600 hover:text-gray-900 focus:outline-none"
+            className="p-1 text-gray-400 hover:text-gray-600 focus:outline-none"
             onClick={onClose}
             title="Close"
           >
@@ -216,37 +171,55 @@ const ColorSwatch: React.FC<{ color: string; onClick: () => void; dataIndex: str
 );
 
 const App: React.FC = () => {
-  const [foregroundColors, setForegroundColors] = useState<ColorEntry[]>([
-    { color: '#FFFFFF', label: 'White' },
-    { color: '#000000', label: 'Black' },
-    { color: '#FF0000', label: 'Red' },
-  ]);
-  const [backgroundColors, setBackgroundColors] = useState<ColorEntry[]>([
-    { color: '#000000', label: 'Black' },
-    { color: '#FFFFFF', label: 'White' },
-    { color: '#0000FF', label: 'Blue' },
-  ]);
+  const [foregroundColors, setForegroundColors] = useState<ColorEntry[]>(() => {
+    const savedColors = localStorage.getItem(STORAGE_KEY);
+    if (savedColors) {
+      try {
+        const { fg } = JSON.parse(savedColors);
+        return fg;
+      } catch (e) {
+        console.error('Error loading foreground colors:', e);
+      }
+    }
+    return [
+      { color: '#FFFFFF', label: 'White' },
+      { color: '#000000', label: 'Black' },
+      { color: '#FF0000', label: 'Red' },
+    ];
+  });
+
+  const [backgroundColors, setBackgroundColors] = useState<ColorEntry[]>(() => {
+    const savedColors = localStorage.getItem(STORAGE_KEY);
+    if (savedColors) {
+      try {
+        const { bg } = JSON.parse(savedColors);
+        return bg;
+      } catch (e) {
+        console.error('Error loading background colors:', e);
+      }
+    }
+    return [
+      { color: '#000000', label: 'Black' },
+      { color: '#FFFFFF', label: 'White' },
+      { color: '#0000FF', label: 'Blue' },
+    ];
+  });
+
   const [activeColorPicker, setActiveColorPicker] = useState<{
     type: 'foreground' | 'background';
     index: number;
   } | null>(null);
 
-  // Load colors from localStorage on initial render
-  useEffect(() => {
-    const savedColors = localStorage.getItem(STORAGE_KEY);
-    if (savedColors) {
-      const { fg, bg } = JSON.parse(savedColors);
-      setForegroundColors(fg);
-      setBackgroundColors(bg);
-    }
-  }, []);
-
   // Save colors to localStorage whenever they change
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      fg: foregroundColors,
-      bg: backgroundColors
-    }));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        fg: foregroundColors,
+        bg: backgroundColors
+      }));
+    } catch (e) {
+      console.error('Error saving colors:', e);
+    }
   }, [foregroundColors, backgroundColors]);
 
   const handleColorChange = (newColor: string) => {
@@ -259,6 +232,11 @@ const App: React.FC = () => {
         color: newColor
       };
       setForegroundColors(newColors);
+      // Save to localStorage immediately
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        fg: newColors,
+        bg: backgroundColors
+      }));
     } else {
       const newColors = [...backgroundColors];
       newColors[activeColorPicker.index] = {
@@ -266,6 +244,11 @@ const App: React.FC = () => {
         color: newColor
       };
       setBackgroundColors(newColors);
+      // Save to localStorage immediately
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        fg: foregroundColors,
+        bg: newColors
+      }));
     }
   };
 
@@ -327,7 +310,9 @@ const App: React.FC = () => {
               Contrast Grid Editor
             </h1>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Enter colors (one per line) to see their contrast ratios. Add labels by using a comma after the color (e.g., "#FF0000, Red Button"). Click any color swatch to edit in HSL.
+              Enter colors (one per line) to see their contrast ratios. Add
+              labels by using a comma after the color (e.g., "#FF0000, Red
+              Button"). Click any color swatch to edit in HSL.
             </p>
           </div>
 
@@ -339,7 +324,7 @@ const App: React.FC = () => {
               </label>
               <textarea
                 className="w-full h-32 px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm"
-                value={backgroundColors.map(formatColorValue).join('\n')}
+                value={backgroundColors.map(formatColorValue).join("\n")}
                 onChange={handleBackgroundChange}
                 placeholder="Enter colors (one per line)"
               />
@@ -351,7 +336,7 @@ const App: React.FC = () => {
               </label>
               <textarea
                 className="w-full h-32 px-3 py-2 text-gray-700 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent font-mono text-sm"
-                value={foregroundColors.map(formatColorValue).join('\n')}
+                value={foregroundColors.map(formatColorValue).join("\n")}
                 onChange={handleForegroundChange}
                 placeholder="Enter colors (one per line)"
               />
@@ -360,83 +345,117 @@ const App: React.FC = () => {
 
           {/* Contrast Grid */}
           <div className="bg-white rounded-lg shadow-sm">
-            <div className="min-w-max divide-y divide-gray-200">
-              {/* Header Row */}
-              <div className="grid relative" style={{ gridTemplateColumns }}>
-                <div className="contrast-cell font-medium bg-gray-50 sticky left-0 z-10">
-                  Contrast Ratios
-                </div>
-                {foregroundColors.map((fgColor, index) => (
-                  <div
-                    key={index}
-                    className="contrast-cell font-medium bg-gray-50"
-                  >
-                    <div className="flex flex-col items-center gap-2">
-                      <ColorSwatch
-                        color={fgColor.color}
-                        onClick={() => {
-                          if (activeColorPicker?.type === 'foreground' && activeColorPicker.index === index) {
-                            setActiveColorPicker(null);
-                          } else {
-                            setActiveColorPicker({ type: 'foreground', index });
-                          }
-                        }}
-                        dataIndex={`foreground-${index}`}
-                      />
-                      {fgColor.label && (
-                        <span className="font-medium text-gray-900">{fgColor.label}</span>
-                      )}
-                      <span className="text-xs text-gray-500">{fgColor.color}</span>
+            <div className="overflow-x-auto relative">
+              <div className="inline-block min-w-full align-middle">
+                <div className="divide-y divide-gray-200">
+                  {/* Header Row */}
+                  <div className="grid" style={{ gridTemplateColumns }}>
+                    <div className="contrast-cell font-medium bg-gray-50 sticky left-0 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                      Contrast Ratios
                     </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Data Rows */}
-              {backgroundColors.map((bgColor, rowIndex) => (
-                <div key={rowIndex} className="grid relative" style={{ gridTemplateColumns }}>
-                  <div className="contrast-cell font-medium bg-gray-50 sticky left-0 z-10">
-                    <div className="flex flex-col items-center gap-2">
-                      <ColorSwatch
-                        color={bgColor.color}
-                        onClick={() => {
-                          if (activeColorPicker?.type === 'background' && activeColorPicker.index === rowIndex) {
-                            setActiveColorPicker(null);
-                          } else {
-                            setActiveColorPicker({ type: 'background', index: rowIndex });
-                          }
-                        }}
-                        dataIndex={`background-${rowIndex}`}
-                      />
-                      {bgColor.label && (
-                        <span className="font-medium text-gray-900">{bgColor.label}</span>
-                      )}
-                      <span className="text-xs text-gray-500">{bgColor.color}</span>
-                    </div>
-                  </div>
-                  {foregroundColors.map((fgColor, colIndex) => {
-                    const ratio = isValidColor(fgColor.color) && isValidColor(bgColor.color)
-                      ? getRatio(fgColor.color, bgColor.color)
-                      : 0;
-
-                    return (
+                    {foregroundColors.map((fgColor, index) => (
                       <div
-                        key={colIndex}
-                        className="contrast-cell"
-                        style={{
-                          backgroundColor: isValidColor(bgColor.color) ? bgColor.color : 'transparent',
-                          color: isValidColor(fgColor.color) ? fgColor.color : 'inherit',
-                        }}
+                        key={index}
+                        className="contrast-cell font-medium bg-gray-50"
                       >
-                        <div className="flex flex-col items-center justify-center h-full">
-                          <span className="text-lg font-bold">{ratio.toFixed(2)}</span>
-                          <span className="text-xs mt-1">{getContrastLabel(ratio)}</span>
+                        <div className="flex flex-col items-center gap-2">
+                          <ColorSwatch
+                            color={fgColor.color}
+                            onClick={() => {
+                              if (
+                                activeColorPicker?.type === "foreground" &&
+                                activeColorPicker.index === index
+                              ) {
+                                setActiveColorPicker(null);
+                              } else {
+                                setActiveColorPicker({ type: "foreground", index });
+                              }
+                            }}
+                            dataIndex={`foreground-${index}`}
+                          />
+                          {fgColor.label && (
+                            <span className="font-medium text-gray-900">
+                              {fgColor.label}
+                            </span>
+                          )}
+                          <span className="text-xs text-gray-500">
+                            {fgColor.color}
+                          </span>
                         </div>
                       </div>
-                    );
-                  })}
+                    ))}
+                  </div>
+
+                  {/* Data Rows */}
+                  {backgroundColors.map((bgColor, rowIndex) => (
+                    <div
+                      key={rowIndex}
+                      className="grid"
+                      style={{ gridTemplateColumns }}
+                    >
+                      <div className="contrast-cell font-medium bg-gray-50 sticky left-0 z-20 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                        <div className="flex flex-col items-center gap-2">
+                          <ColorSwatch
+                            color={bgColor.color}
+                            onClick={() => {
+                              if (
+                                activeColorPicker?.type === "background" &&
+                                activeColorPicker.index === rowIndex
+                              ) {
+                                setActiveColorPicker(null);
+                              } else {
+                                setActiveColorPicker({
+                                  type: "background",
+                                  index: rowIndex,
+                                });
+                              }
+                            }}
+                            dataIndex={`background-${rowIndex}`}
+                          />
+                          {bgColor.label && (
+                            <span className="font-medium text-gray-900">
+                              {bgColor.label}
+                            </span>
+                          )}
+                          <span className="text-xs text-gray-500">
+                            {bgColor.color}
+                          </span>
+                        </div>
+                      </div>
+                      {foregroundColors.map((fgColor, colIndex) => {
+                        const ratio =
+                          isValidColor(fgColor.color) && isValidColor(bgColor.color)
+                            ? getRatio(fgColor.color, bgColor.color)
+                            : 0;
+
+                        return (
+                          <div
+                            key={colIndex}
+                            className="contrast-cell"
+                            style={{
+                              backgroundColor: isValidColor(bgColor.color)
+                                ? bgColor.color
+                                : "transparent",
+                              color: isValidColor(fgColor.color)
+                                ? fgColor.color
+                                : "inherit",
+                            }}
+                          >
+                            <div className="flex flex-col items-center justify-center h-full">
+                              <span className="text-lg font-bold">
+                                {ratio.toFixed(2)}
+                              </span>
+                              <div className="text-xs mt-1">
+                                {getContrastLabel(ratio)}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
             </div>
           </div>
 
@@ -475,13 +494,17 @@ const App: React.FC = () => {
       {activeColorPicker && (
         <ColorPicker
           color={
-            activeColorPicker.type === 'foreground'
+            activeColorPicker.type === "foreground"
               ? foregroundColors[activeColorPicker.index].color
               : backgroundColors[activeColorPicker.index].color
           }
           onChange={handleColorChange}
           onClose={() => setActiveColorPicker(null)}
-          triggerRect={document.querySelector(`[data-color-index="${activeColorPicker.type}-${activeColorPicker.index}"]`)?.getBoundingClientRect()}
+          triggerRect={document
+            .querySelector(
+              `[data-color-index="${activeColorPicker.type}-${activeColorPicker.index}"]`
+            )
+            ?.getBoundingClientRect()}
         />
       )}
     </div>

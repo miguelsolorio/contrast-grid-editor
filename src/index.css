@@ -12,6 +12,24 @@
   @apply relative p-4 text-center border border-gray-200 min-h-[100px];
 }
 
+/* Scrolling container styles */
+.overflow-x-auto {
+  @apply overflow-x-scroll;
+  -webkit-overflow-scrolling: touch;
+}
+
+.overflow-x-auto::-webkit-scrollbar {
+  @apply h-2 bg-gray-100;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
+
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
