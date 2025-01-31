@@ -4,6 +4,8 @@ _This entire site was built entirely by `claude-3.5-sonnet1`_
 
 A modern, interactive web application for testing color contrast ratios between different combinations of colors. Built with React, TypeScript, and Tailwind CSS, this tool helps designers and developers ensure their color choices meet WCAG accessibility standards.
 
+https://github.com/user-attachments/assets/6a330866-aa81-4e50-a4d2-44814879acd6
+
 ## Features
 
 - **Interactive Color Grid**: Visualize contrast ratios between foreground and background colors in a dynamic grid format
