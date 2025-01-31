@@ -27,23 +27,7 @@ interface RGB {
 
 type ColorMode = 'hsl' | 'rgb';
 
-interface Position {
-  x: number;
-  y: number;
-}
-
-interface DragItem {
-  index: number;
-  type: 'column';
-}
-
 const STORAGE_KEY = 'contrast-grid-colors';
-
-const getContrastClass = (ratio: number): string => {
-  if (ratio >= 7) return 'passing-aaa';
-  if (ratio >= 4.5) return 'passing-aa';
-  return 'failing';
-};
 
 const getContrastLabel = (ratio: number): JSX.Element | string => {
   if (ratio >= 7) return 'AAA';
@@ -433,8 +417,6 @@ const App: React.FC = () => {
   const formatColorValue = (entry: ColorEntry): string => {
     return entry.label ? `${entry.color}, ${entry.label}` : entry.color;
   };
-
-  const gridTemplateColumns = `300px repeat(${foregroundColors.length}, minmax(120px, 1fr))`;
 
   const handleDragStart = (e: React.DragEvent, index: number, type: 'column' | 'row') => {
     e.stopPropagation();
