@@ -30,8 +30,8 @@ type ColorMode = 'hsl' | 'rgb';
 const STORAGE_KEY = 'contrast-grid-colors';
 
 const getContrastLabel = (ratio: number): JSX.Element | string => {
-  if (ratio >= 7) return 'AAA';
-  if (ratio >= 4.5) return 'AA';
+  if (ratio >= 7) return <span className="text-emerald-600 dark:text-emerald-500 font-bold">✓ AAA</span>;
+  if (ratio >= 4.5) return <span className="text-emerald-600 dark:text-emerald-500 font-bold">✓ AA</span>;
   return <span className="text-red-600 font-bold">✕</span>;
 };
 
@@ -115,7 +115,7 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ color, onChange, onClose, tri
 
   const position = {
     x: triggerRect ? Math.max(0, triggerRect.left + (triggerRect.width / 2) - 140) : 100,
-    y: triggerRect ? Math.max(0, triggerRect.top - 390) : 100
+    y: triggerRect ? Math.max(0, triggerRect.top - 395) : 100
   };
 
   const updateHsl = (newHsl: HSL) => {
@@ -150,21 +150,8 @@ const ColorPicker: React.FC<ColorPickerProps> = ({ color, onChange, onClose, tri
         }}
         onClick={e => e.stopPropagation()}
       >
-        <div className="absolute right-2 top-2">
-          <button
-            className="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 focus:outline-none"
-            onClick={onClose}
-            title="Close"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-          </button>
-        </div>
-
         <div className="p-4">
           <div className="mb-4 h-16 rounded-lg shadow-inner" style={{ backgroundColor: color }} />
-
           <div className="flex justify-center mb-4">
             <div className="inline-flex rounded-lg border border-gray-200 dark:border-gray-700">
               <button
