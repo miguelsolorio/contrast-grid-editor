@@ -36,14 +36,31 @@ const getContrastLabel = (ratio: number): JSX.Element | string => {
 };
 
 const parseColorInput = (input: string): ColorEntry => {
-  const [colorPart, ...labelParts] = input.split(',');
-  const trimmedColor = colorPart.trim();
+  // Find hex/color part while preserving original format
+  const firstCommaIndex = input.indexOf(',');
+  const firstSpaceIndex = input.indexOf(' ');
 
-  // If it looks like a hex color without #, add it
-  const color = /^[0-9A-Fa-f]{6}$/.test(trimmedColor) ? `#${trimmedColor}` : trimmedColor;
-  const label = labelParts.length > 0 ? labelParts.join(',').trim() : undefined;
+  // Determine where the color part ends
+  let colorEndIndex = -1;
+  if (firstCommaIndex !== -1 && firstSpaceIndex !== -1) {
+    colorEndIndex = Math.min(firstCommaIndex, firstSpaceIndex);
+  } else if (firstCommaIndex !== -1) {
+    colorEndIndex = firstCommaIndex;
+  } else if (firstSpaceIndex !== -1) {
+    colorEndIndex = firstSpaceIndex;
+  }
 
-  return { color, label };
+  if (colorEndIndex === -1) return { color: input };
+
+  const colorPart = input.substring(0, colorEndIndex);
+  const labelPart = input.substring(colorEndIndex);
+
+  const color = /^[0-9A-Fa-f]{6}$/.test(colorPart) ? `#${colorPart}` : colorPart;
+
+  return {
+    color,
+    label: labelPart || undefined
+  };
 };
 
 const hexToHsl = (hex: string): HSL => {
@@ -257,9 +274,9 @@ const App: React.FC = () => {
       }
     }
     return [
-      { color: '#FFFFFF', label: 'White' },
-      { color: '#000000', label: 'Black' },
-      { color: '#FF0000', label: 'Red' },
+      { color: '#FFFFFF', label: ' White' },
+      { color: '#000000', label: ' Black' },
+      { color: '#FF0000', label: ' Red' },
     ];
   });
 
@@ -274,9 +291,9 @@ const App: React.FC = () => {
       }
     }
     return [
-      { color: '#000000', label: 'Black' },
-      { color: '#FFFFFF', label: 'White' },
-      { color: '#0000FF', label: 'Blue' },
+      { color: '#000000', label: ' Black' },
+      { color: '#FFFFFF', label: ' White' },
+      { color: '#0000FF', label: ' Blue' },
     ];
   });
 
@@ -343,31 +360,29 @@ const App: React.FC = () => {
   };
 
   const handleForegroundChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    // Preserve the exact input, including all whitespace
     const colors = e.target.value
       .split('\n')
-      .map(line => line.trim())
-      .filter(Boolean)
-      .map(parseColorInput);
+      .map(line => parseColorInput(line));
     setForegroundColors(colors);
   };
 
   const handleBackgroundChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    // Preserve the exact input, including all whitespace
     const colors = e.target.value
       .split('\n')
-      .map(line => line.trim())
-      .filter(Boolean)
-      .map(parseColorInput);
+      .map(line => parseColorInput(line));
     setBackgroundColors(colors);
   };
 
   const handleClear = () => {
     // Reset to basic 1x1 black and white grid
     const newForegroundColors: ColorEntry[] = [
-      { color: '#FFFFFF', label: 'White' }
+      { color: '#FFFFFF', label: ' White' }
     ];
 
     const newBackgroundColors: ColorEntry[] = [
-      { color: '#000000', label: 'Black' }
+      { color: '#000000', label: ' Black' }
     ];
 
     setForegroundColors(newForegroundColors);
@@ -379,15 +394,21 @@ const App: React.FC = () => {
   };
 
   const handleRandom = () => {
-    // Generate 1 random foreground color
-    const newForegroundColors: ColorEntry[] = [
-      { color: chroma.random().hex(), label: 'Random' }
-    ];
+    // Generate random number of colors (1-4) for each
+    const fgCount = Math.floor(Math.random() * 4) + 1;
+    const bgCount = Math.floor(Math.random() * 4) + 1;
 
-    // Generate 1 random background color
-    const newBackgroundColors: ColorEntry[] = [
-      { color: chroma.random().hex(), label: 'Random' }
-    ];
+    // Generate random foreground colors
+    const newForegroundColors: ColorEntry[] = Array.from({ length: fgCount }, (_, i) => ({
+      color: chroma.random().hex(),
+      label: ` Column ${i + 1}`
+    }));
+
+    // Generate random background colors
+    const newBackgroundColors: ColorEntry[] = Array.from({ length: bgCount }, (_, i) => ({
+      color: chroma.random().hex(),
+      label: ` Row ${i + 1}`
+    }));
 
     setForegroundColors(newForegroundColors);
     setBackgroundColors(newBackgroundColors);
@@ -415,7 +436,9 @@ const App: React.FC = () => {
   };
 
   const formatColorValue = (entry: ColorEntry): string => {
-    return entry.label ? `${entry.color}, ${entry.label}` : entry.color;
+    if (!entry.label) return entry.color;
+    // Return exactly what was entered, preserving original spacing
+    return `${entry.color}${entry.label}`;
   };
 
   const handleDragStart = (e: React.DragEvent, index: number, type: 'column' | 'row') => {
@@ -493,14 +516,12 @@ const App: React.FC = () => {
               Contrast Grid Editor
             </h1>
             <p className="text-sm text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
-              Enter colors (one per line) to see their contrast ratios. Add
-              labels by using a comma after the color (e.g., "#FF0000, Red
-              Button"). Click any color swatch to edit in HSL.
+              Compare multiple background and foreground colors to check their contrast ratio for accessibility. Easily adjust colors using HSL or RGB by clicking on any swatch to ensure <a className='underline hover:text-slate-900 dark:hover:text-slate-200 transition-colors' href='https://www.w3.org/TR/UNDERSTANDING-WCAG20/visual-audio-contrast-contrast.html' target='_blank'>WCAG compliance</a>.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6">
+          <div className="grid md:grid-cols-5 gap-6">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6 col-span-2">
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
                 Background Colors (Rows):
               </label>
@@ -512,7 +533,7 @@ const App: React.FC = () => {
               />
             </div>
 
-            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6 col-span-2">
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-200 mb-2">
                 Foreground Colors (Columns):
               </label>
@@ -522,6 +543,25 @@ const App: React.FC = () => {
                 onChange={handleForegroundChange}
                 placeholder="Enter colors (one per line) - Drag column headers to reorder"
               />
+            </div>
+
+            <div className="bg-transparent rounded-lg shadow-sm col-span-1">
+
+              <div className="space-y-4">
+                <button
+                  onClick={handleClear}
+                  className="w-full px-4 py-2 bg-red-600 dark:bg-red-700 text-white rounded-lg hover:bg-red-700 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors"
+                >
+                  Clear All Colors
+                </button>
+
+                <button
+                  onClick={handleRandom}
+                  className="w-full px-4 py-2 bg-primary-600 dark:bg-primary-700 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors"
+                >
+                  Random Colors
+                </button>
+              </div>
             </div>
           </div>
 
@@ -685,21 +725,6 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex justify-end space-x-4">
-            <button
-              onClick={handleRandom}
-              className="px-4 py-2 bg-primary-600 dark:bg-primary-700 text-white rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors"
-            >
-              Random Colors
-            </button>
-            <button
-              onClick={handleClear}
-              className="px-4 py-2 bg-red-600 dark:bg-red-700 text-white rounded-lg hover:bg-red-700 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 transition-colors"
-            >
-              Clear All Colors
-            </button>
-          </div>
-
           <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border-slate-800 p-6">
             <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-4">
               Legend
@@ -738,7 +763,7 @@ const App: React.FC = () => {
               href="https://github.com/miguelsolorio/contrast-grid-editor"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
+              className="underline hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
             >
               GitHub
             </a>
@@ -749,7 +774,7 @@ const App: React.FC = () => {
                 href="https://miguelsolorio.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
+                className="underline hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
               >
                 Miguel Solorio
               </a>{" "}
