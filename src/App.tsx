@@ -567,7 +567,7 @@ const App: React.FC = () => {
                           className="group border border-slate-200 dark:border-slate-700 p-2 min-w-[120px] bg-slate-50 dark:bg-slate-800 relative"
                         >
                           <div
-                            className="absolute top-0 bottom-0 left-0 w-8 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100"
+                            className="absolute z-50 w-6 top-0 bottom-0 left-0 cursor-grab active:cursor-grabbing hover:bg-slate-600 hover:bg-opacity-20 opacity-0 group-hover:opacity-100"
                             draggable="true"
                             onDragStart={(e) =>
                               handleDragStart(e, index, "column")
@@ -578,7 +578,7 @@ const App: React.FC = () => {
                             onDragEnd={() => handleDragEnd("column")}
                           />
                           <div
-                            className="absolute top-0 bottom-0 right-0 w-8 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100"
+                            className="absolute z-50 w-6 top-0 bottom-0 right-0 cursor-grab active:cursor-grabbing hover:bg-slate-600 hover:bg-opacity-20 opacity-0 group-hover:opacity-100"
                             draggable="true"
                             onDragStart={(e) =>
                               handleDragStart(e, index, "column")
@@ -624,7 +624,7 @@ const App: React.FC = () => {
                       <tr key={rowIndex} className="group">
                         <td className="sticky left-0 z-20 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-3 min-w-[200px] shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] relative">
                           <div
-                            className="absolute left-0 right-0 top-0 h-8 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100"
+                            className="absolute left-0 right-0 top-0 h-4 cursor-grab active:cursor-grabbing hover:bg-slate-600 hover:bg-opacity-20 z-50 opacity-0 group-hover:opacity-100"
                             draggable="true"
                             onDragStart={(e) =>
                               handleDragStart(e, rowIndex, "row")
@@ -635,7 +635,7 @@ const App: React.FC = () => {
                             onDragEnd={() => handleDragEnd("row")}
                           />
                           <div
-                            className="absolute left-0 right-0 bottom-0 h-8 cursor-grab active:cursor-grabbing opacity-0 group-hover:opacity-100"
+                            className="absolute left-0 right-0 bottom-0 h-4 cursor-grab active:cursor-grabbing hover:bg-slate-600 hover:bg-opacity-20 z-50 opacity-0 group-hover:opacity-100"
                             draggable="true"
                             onDragStart={(e) =>
                               handleDragStart(e, rowIndex, "row")
