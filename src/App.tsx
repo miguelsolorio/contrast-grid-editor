@@ -30,9 +30,9 @@ type ColorMode = 'hsl' | 'rgb';
 const STORAGE_KEY = 'contrast-grid-colors';
 
 const getContrastLabel = (ratio: number): JSX.Element | string => {
-  if (ratio >= 7) return <span className="p-1 rounded-sm font-bold">✓ AAA</span>;
-  if (ratio >= 4.5) return <span className="p-1 rounded-sm font-bold">✓ AA</span>;
-  return <span className="rounded-sm font-bold">✕</span>;
+  if (ratio >= 7) return <span className="bg-emerald-400 text-emerald-800 p-1 px-2 rounded-sm font-bold">✓ AAA</span>;
+  if (ratio >= 4.5) return <span className="bg-emerald-400 text-emerald-800 p-1 px-2 rounded-sm font-bold">✓ AA</span>;
+  return <span className="p-1 rounded-sm font-bold">✕ Failed</span>;
 };
 
 const parseColorInput = (input: string): ColorEntry => {
